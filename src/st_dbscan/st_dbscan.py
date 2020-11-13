@@ -15,6 +15,16 @@ from sklearn.cluster import DBSCAN
 from sklearn.utils import check_array
 
 
+def haversine_matrix_broadcasting(data):
+
+    data = np.deg2rad(data)
+    lat = data[:,0]
+    lng = data[:,1]
+    diff_lat = lat[:,None] - lat
+    diff_lng = lng[:,None] - lng
+    d = np.sin(diff_lat/2)**2 + np.cos(lat[:,None])*np.cos(lat) * np.sin(diff_lng/2)**2
+    return 2 * 6371 * np.arcsin(np.sqrt(d))
+
 class ST_DBSCAN():
     """
     A class to perform the ST_DBSCAN clustering
@@ -33,7 +43,8 @@ class ST_DBSCAN():
         ‘braycurtis’, ‘canberra’, ‘chebyshev’, ‘cityblock’, ‘correlation’,
         ‘cosine’, ‘dice’, ‘euclidean’, ‘hamming’, ‘jaccard’, ‘jensenshannon’,
         ‘kulsinski’, ‘mahalanobis’, ‘matching’, ‘rogerstanimoto’, ‘sqeuclidean’,
-        ‘russellrao’, ‘seuclidean’, ‘sokalmichener’, ‘sokalsneath’, ‘yule’.
+        ‘russellrao’, ‘seuclidean’, ‘sokalmichener’, ‘sokalsneath’, ‘yule’,
+        'haversine'.
     n_jobs : int or None, default=-1
         The number of processes to start -1 means use all processors 
     Attributes
@@ -86,10 +97,16 @@ class ST_DBSCAN():
 
         n, m = X.shape
 
-        # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and the spatial attributes
-        time_dist = squareform(pdist(X[:, 0].reshape(n, 1),
-                                     metric=self.metric))
-        euc_dist = squareform(pdist(X[:, 1:], metric=self.metric))
+        if self.metric == 'haversine':
+            # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and Haversine Distance Matrix for the spatial attributes
+            time_dist = squareform(
+                pdist(X[:, 0].reshape(n, 1), metric='euclidean'))
+            euc_dist = haversine_matrix_broadcasting(X[:, 1:])
+        else:
+            # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and the spatial attributes
+            time_dist = squareform(pdist(X[:, 0].reshape(n, 1),
+                                         metric=self.metric))
+            euc_dist = squareform(pdist(X[:, 1:], metric=self.metric))
 
         # filter the euc_dist matrix using the time_dist
         dist = np.where(time_dist <= self.eps2, euc_dist, 2 * self.eps1)
@@ -152,10 +169,15 @@ class ST_DBSCAN():
                 frame = X[np.isin(X[:, 0], period)]
                 n, m = frame.shape
 
-                # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and the spatial attributes
-                time_dist = squareform(
-                    pdist(frame[:, 0].reshape(n, 1), metric=self.metric))
-                euc_dist = squareform(pdist(frame[:, 1:], metric=self.metric))
+                if self.metric == 'haversine':
+                    time_dist = squareform(
+                        pdist(frame[:, 0].reshape(n, 1), metric='euclidean'))
+                    euc_dist = haversine_matrix_broadcasting(frame[:, 1:])
+                else:
+                    # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and the spatial attributes
+                    time_dist = squareform(
+                        pdist(frame[:, 0].reshape(n, 1), metric=self.metric))
+                    euc_dist = squareform(pdist(frame[:, 1:], metric=self.metric))
 
                 # filter the euc_dist matrix using the time_dist
                 dist = np.where(time_dist <= self.eps2, euc_dist,
