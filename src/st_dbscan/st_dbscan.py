@@ -13,7 +13,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from sklearn.cluster import DBSCAN
 from sklearn.utils import check_array
-
+from progressbar import progressbar
 
 def haversine_matrix_broadcasting(data):
 
@@ -164,7 +164,7 @@ class ST_DBSCAN():
         right_overlap = 0
         max_label = 0
 
-        for i in range(0, len(time), (frame_size - frame_overlap + 1)):
+        for i in progressbar(range(0, len(time), (frame_size - frame_overlap + 1))):
             for period in [time[i:i + frame_size]]:
                 frame = X[np.isin(X[:, 0], period)]
                 n, m = frame.shape
