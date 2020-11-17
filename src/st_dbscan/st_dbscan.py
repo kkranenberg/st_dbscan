@@ -120,6 +120,52 @@ class ST_DBSCAN():
 
         return self
 
+    def fit_predict(self, X):
+        """
+        Apply the ST DBSCAN algorithm
+        ----------
+        X : 2D numpy array with
+            The first element of the array should be the time
+            attribute as float. The following positions in the array are
+            treated as spatial coordinates. The structure should look like this [[time_step1, x, y], [time_step2, x, y]..]
+            For example 2D dataset:
+            array([[0,0.45,0.43],
+            [0,0.54,0.34],...])
+        Returns
+        -------
+        self
+        """
+        # check if input is correct
+        X = check_array(X)
+
+        if not self.eps1 > 0.0 or not self.eps2 > 0.0 or not self.min_samples > 0.0:
+            raise ValueError('eps1, eps2, minPts must be positive')
+
+        n, m = X.shape
+
+        if self.metric == 'haversine':
+            # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and Haversine Distance Matrix for the spatial attributes
+            time_dist = squareform(
+                pdist(X[:, 0].reshape(n, 1), metric='euclidean'))
+            euc_dist = haversine_matrix_broadcasting(X[:, 1:])
+        else:
+            # Compute sqaured form Euclidean Distance Matrix for 'time' attribute and the spatial attributes
+            time_dist = squareform(pdist(X[:, 0].reshape(n, 1),
+                                         metric=self.metric))
+            euc_dist = squareform(pdist(X[:, 1:], metric=self.metric))
+
+        # filter the euc_dist matrix using the time_dist
+        dist = np.where(time_dist <= self.eps2, euc_dist, 2 * self.eps1)
+
+        db = DBSCAN(eps=self.eps1,
+                    min_samples=self.min_samples,
+                    metric='precomputed')
+        labels = db.fit_predict(dist)
+
+
+
+        return labels
+
     def fit_frame_split(self, X, frame_size, frame_overlap=None):
         """
         Apply the ST DBSCAN algorithm with splitting it into frames 
@@ -164,7 +210,7 @@ class ST_DBSCAN():
         right_overlap = 0
         max_label = 0
 
-        for i in progressbar(range(0, len(time), (frame_size - frame_overlap + 1))):
+        for i in progressbar(range(0, len(time), (frame_size - frame_overlap) + 1)):
             for period in [time[i:i + frame_size]]:
                 frame = X[np.isin(X[:, 0], period)]
                 n, m = frame.shape
@@ -204,3 +250,6 @@ class ST_DBSCAN():
 
         self.labels = labels
         return self
+
+
+
