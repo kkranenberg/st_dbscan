@@ -48,7 +48,7 @@ def kkr_prepare_acled_for_st_dbscan(df_acled_api, to_cartesian=False):
 
 df_acled_api = pd.read_csv('acled_api_20201027_141757.csv')
 
-df_acled_ame = df_acled_api.loc[df_acled_api['region'].str.contains('Middle East')].head(50000).copy()
+df_acled_ame = df_acled_api.loc[df_acled_api['region'].str.contains('Middle East')].copy()
 df_acled_ame.sort_values(['event_date'], kind='stable', inplace=True, ignore_index=True)
 np_acled_ame = kkr_prepare_acled_for_st_dbscan(df_acled_ame)
 
