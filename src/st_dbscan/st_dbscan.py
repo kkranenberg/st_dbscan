@@ -46,7 +46,11 @@ class ST_DBSCAN():
         ‘russellrao’, ‘seuclidean’, ‘sokalmichener’, ‘sokalsneath’, ‘yule’,
         'haversine'.
     n_jobs : int or None, default=-1
-        The number of processes to start -1 means use all processors 
+        The number of processes to start -1 means use all processors
+    algorithm : string default=’auto’
+        The algorithm to be used by the NearestNeighbors module to compute pointwise distances and find nearest neighbors.
+        See SKlearn NearestNeighbors module documentation for details.
+        {‘auto’, ‘ball_tree’, ‘kd_tree’, ‘brute’}
     Attributes
     ----------
     labels : array, shape = [n_samples]
@@ -67,12 +71,14 @@ class ST_DBSCAN():
                  eps2=10,
                  min_samples=5,
                  metric='euclidean',
-                 n_jobs=-1):
+                 n_jobs=-1,
+                 algorithm='auto'):
         self.eps1 = eps1
         self.eps2 = eps2
         self.min_samples = min_samples
         self.metric = metric
         self.n_jobs = n_jobs
+        self.algorithm = algorithm
 
     def fit(self, X):
         """
@@ -113,7 +119,8 @@ class ST_DBSCAN():
 
         db = DBSCAN(eps=self.eps1,
                     min_samples=self.min_samples,
-                    metric='precomputed')
+                    metric='precomputed',
+                    algorithm=self.algorithm)
         db.fit(dist)
 
         self.labels = db.labels_
@@ -159,7 +166,8 @@ class ST_DBSCAN():
 
         db = DBSCAN(eps=self.eps1,
                     min_samples=self.min_samples,
-                    metric='precomputed')
+                    metric='precomputed',
+                    algorithm=self.algorithm)
         labels = db.fit_predict(dist)
 
 
@@ -231,7 +239,8 @@ class ST_DBSCAN():
 
                 db = DBSCAN(eps=self.eps1,
                             min_samples=self.min_samples,
-                            metric='precomputed')
+                            metric='precomputed',
+                            algorithm=self.algorithm)
                 db.fit(dist)
 
                 # very simple merging - take just right clusters of the right frame
