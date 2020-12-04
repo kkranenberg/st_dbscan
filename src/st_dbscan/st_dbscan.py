@@ -250,12 +250,21 @@ class ST_DBSCAN():
                 else:
                     # delete the right overlap
                     labels = labels[0:len(labels) - right_overlap]
+                    print(np.min(labels), np.max(labels))
                     # change the labels of the new clustering and concat
-                    labels = np.concatenate((labels, (db.labels_ + max_label)))
+                    test_labels = np.where(db.labels_<0,db.labels_,db.labels_ + max_label)
+                    print(np.min(test_labels),np.max(test_labels))
+                    new_labels=db.labels_ + max_label
+
+                    #print(np.min(new_labels),np.max(new_labels))
+
+                    labels = np.concatenate((labels,
+                                             #(db.labels_ + max_label)
+                                             test_labels))
 
                 right_overlap = len(X[np.isin(X[:, 0],
                                               period[-frame_overlap + 1:])])
-                max_label = np.max(labels)
+                max_label = np.max(labels)+1
 
         self.labels = labels
         return self

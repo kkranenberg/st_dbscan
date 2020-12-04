@@ -6,7 +6,6 @@ from astropy import coordinates
 
 # pip install -e git+https://github.com/kkranenberg/st_dbscan#egg=ST_DBSCAN
 
-
 from st_dbscan import ST_DBSCAN
 
 
@@ -48,7 +47,7 @@ def kkr_prepare_acled_for_st_dbscan(df_acled_api, to_cartesian=False):
 
 df_acled_api = pd.read_csv('acled_api_20201027_141757.csv')
 
-df_acled_ame = df_acled_api.loc[df_acled_api['region'].str.contains('Middle East')].copy()
+df_acled_ame = df_acled_api.loc[df_acled_api['region'].str.contains('Middle East')].head(50000).copy()
 df_acled_ame.sort_values(['event_date'], kind='stable', inplace=True, ignore_index=True)
 np_acled_ame = kkr_prepare_acled_for_st_dbscan(df_acled_ame)
 
@@ -57,7 +56,7 @@ print('MinPts = ln(', len(np_acled_ame), ') = ', np.round(np.log(len(np_acled_am
 fit=True
 split=True
 
-frame_size= 100
+frame_size= 180
 
 for eps1 in [50]:
     for eps2 in [7]:
@@ -66,7 +65,7 @@ for eps1 in [50]:
               eps2, 'min_samples:', np.round(np.log(len(np_acled_ame))), 'frame_size:', frame_size
               )
 
-        stdbscan = ST_DBSCAN(eps1, eps2, np.round(np.log(len(np_acled_ame))), metric='haversine')
+
         if fit:
             stdbscan_fit = ST_DBSCAN(eps1, eps2, np.round(np.log(len(np_acled_ame))), metric='haversine')
             stdbscan_fit.fit(np_acled_ame)
