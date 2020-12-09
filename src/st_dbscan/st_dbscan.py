@@ -15,15 +15,16 @@ from sklearn.cluster import DBSCAN
 from sklearn.utils import check_array
 from progressbar import progressbar
 
-def haversine_matrix_broadcasting(data):
 
+def haversine_matrix_broadcasting(data):
     data = np.deg2rad(data)
-    lat = data[:,0]
-    lng = data[:,1]
-    diff_lat = lat[:,None] - lat
-    diff_lng = lng[:,None] - lng
-    d = np.sin(diff_lat/2)**2 + np.cos(lat[:,None])*np.cos(lat) * np.sin(diff_lng/2)**2
+    lat = data[:, 0]
+    lng = data[:, 1]
+    diff_lat = lat[:, None] - lat
+    diff_lng = lng[:, None] - lng
+    d = np.sin(diff_lat / 2) ** 2 + np.cos(lat[:, None]) * np.cos(lat) * np.sin(diff_lng / 2) ** 2
     return 2 * 6371 * np.arcsin(np.sqrt(d))
+
 
 class ST_DBSCAN():
     """
@@ -66,6 +67,7 @@ class ST_DBSCAN():
     
     Peca, I., Fuchs, G., Vrotsou, K., Andrienko, N. V., & Andrienko, G. L. (2012). Scalable Cluster Analysis of Spatial Events. In EuroVA@ EuroVis.
     """
+
     def __init__(self,
                  eps1=0.5,
                  eps2=10,
@@ -170,8 +172,6 @@ class ST_DBSCAN():
                     algorithm=self.algorithm)
         labels = db.fit_predict(dist)
 
-
-
         return labels
 
     def fit_frame_split(self, X, frame_size, frame_overlap=None):
@@ -250,24 +250,17 @@ class ST_DBSCAN():
                 else:
                     # delete the right overlap
                     labels = labels[0:len(labels) - right_overlap]
-                    print(np.min(labels), np.max(labels))
-                    # change the labels of the new clustering and concat
-                    test_labels = np.where(db.labels_<0,db.labels_,db.labels_ + max_label)
-                    print(np.min(test_labels),np.max(test_labels))
-                    new_labels=db.labels_ + max_label
 
-                    #print(np.min(new_labels),np.max(new_labels))
+                    # change the labels of the new clustering and concat
+                    labels_new = np.where(db.labels_ < 0, db.labels_, db.labels_ + max_label)
 
                     labels = np.concatenate((labels,
-                                             #(db.labels_ + max_label)
-                                             test_labels))
+                                             # (db.labels_ + max_label)
+                                             labels_new))
 
                 right_overlap = len(X[np.isin(X[:, 0],
                                               period[-frame_overlap + 1:])])
-                max_label = np.max(labels)+1
+                max_label = np.max(labels) + 1
 
         self.labels = labels
         return self
-
-
-
