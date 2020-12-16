@@ -47,13 +47,13 @@ def kkr_prepare_acled_for_st_dbscan(df_acled_api, to_cartesian=False):
 
 df_acled_api = pd.read_csv('acled_api_20201027_141757.csv')
 
-df_acled_ame = df_acled_api.loc[df_acled_api['region'].str.contains('Middle East')].copy()
+df_acled_ame = df_acled_api.loc[df_acled_api['region'].str.contains('Middle East')].head(50000).copy()
 df_acled_ame.sort_values(['event_date'], kind='stable', inplace=True, ignore_index=True)
 np_acled_ame = kkr_prepare_acled_for_st_dbscan(df_acled_ame)
 
 print('MinPts = ln(', len(np_acled_ame), ') = ', np.round(np.log(len(np_acled_ame))))
 
-fit=False
+fit=True
 split=True
 
 frame_size= 210
@@ -70,14 +70,14 @@ for eps1 in [50]:
             stdbscan_fit = ST_DBSCAN(eps1, eps2, np.round(np.log(len(np_acled_ame))), metric='haversine')
             stdbscan_fit.fit(np_acled_ame)
 
-            df_acled_ame['cluster_fit_'+eps1+'_'+eps2] = stdbscan_fit.labels
+            df_acled_ame['cluster_fit_'+str(eps1)+'_'+str(eps2)] = stdbscan_fit.labels
 
             fig = px.scatter_mapbox(df_acled_ame,
-                                    lat="latitude", lon="longitude",  animation_frame='cluster_fit',
+                                    lat="latitude", lon="longitude",  animation_frame='cluster_fit_'+str(eps1)+'_'+str(eps2),
                                     zoom=4,
                                     # center=cent,
                                     #color_continuous_scale=px.colors.cyclical.IceFire,
-                                    hover_data=['cluster_fit','latitude','longitude', 'event_date','country','actor1','actor2']
+                                    hover_data=['cluster_fit_'+str(eps1)+'_'+str(eps2),'latitude','longitude', 'event_date','country','actor1','actor2']
                                     )
             fig.update_layout(mapbox_style="open-street-map")
             fig.write_html('maps/fig_'+str(eps1)+'_'+str(eps2)+'.html')
@@ -95,14 +95,14 @@ for eps1 in [50]:
             stdbscan_fit_split = ST_DBSCAN(eps1, eps2, np.round(np.log(len(np_acled_ame))), metric='haversine')
             stdbscan_fit_split.fit_frame_split(np_acled_ame, frame_size)
 
-            df_acled_ame['cluster_'+eps1+'_'+eps2+'_'+frame_size] = stdbscan_fit_split.labels
+            df_acled_ame['cluster_'+str(eps1)+'_'+str(eps2)+'_'+str(frame_size)] = stdbscan_fit_split.labels
 
             fig1 = px.scatter_mapbox(df_acled_ame,
-                                     lat="latitude", lon="longitude", animation_frame='cluster_split',
+                                     lat="latitude", lon="longitude", animation_frame='cluster_'+str(eps1)+'_'+str(eps2)+'_'+str(frame_size),
                                      zoom=4,
                                      # center=cent,
                                      # color_continuous_scale=px.colors.cyclical.IceFire,
-                                     hover_data=['cluster_split', 'latitude', 'longitude', 'event_date', 'country', 'actor1',
+                                     hover_data=['cluster_'+str(eps1)+'_'+str(eps2)+'_'+str(frame_size), 'latitude', 'longitude', 'event_date', 'country', 'actor1',
                                                  'actor2']
                                      )
             fig1.update_layout(mapbox_style="open-street-map")
@@ -118,7 +118,7 @@ for eps1 in [50]:
                   #      'Label_count:',len(stdbscan_fit.labels),
                   'Label_count_split:', len(stdbscan_fit_split.labels))
 
-        # save to result to df_st_dbscan_params
+
 
 
         if fit and split:
